@@ -25,21 +25,17 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // ✅ new way to disable CSRF in Spring Boot 3.x
-                .csrf(AbstractHttpConfigurer::disable)
-
+                .csrf(AbstractHttpConfigurer::disable)  // ✅ disable CSRF
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()   // public endpoints
-                        .anyRequest().authenticated()              // others need JWT
+                        .requestMatchers("/auth/**").permitAll()
+                        .anyRequest().authenticated()
                 )
-
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 );
 
-        // ✅ Add JWT filter before Spring’s UsernamePasswordAuthenticationFilter
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
+
 }

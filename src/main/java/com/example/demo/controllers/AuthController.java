@@ -8,7 +8,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
-
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -33,14 +32,25 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
-        var user = userRepo.findByEmail(request.get("email"))
+    public ResponseEntity<?> login(@RequestBody User user) {
+        // Find user by email
+        var existingUser = userRepo.findByEmail(user.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (!encoder.matches(request.get("password"), user.getPasswordHash())) {
+        // Check password
+        if (!encoder.matches(user.getPasswordHash(), existingUser.getPasswordHash())) {
             throw new RuntimeException("Invalid credentials");
         }
-        String token = jwtUtil.generateToken(user.getEmail());
+
+        // Generate JWT
+        String token = jwtUtil.generateToken(existingUser.getEmail());
         return ResponseEntity.ok(Map.of("access_token", token));
+    }
+
+
+    // ✅ New GET endpoint to list all users
+    @GetMapping("/users")
+    public ResponseEntity<?> getAllUsers() {
+        return ResponseEntity.ok(userRepo.findAll());
     }
 }
